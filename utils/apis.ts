@@ -13,6 +13,7 @@ import {
   PlaceDetails,
   SceneContentHydrated,
   SceneCreationInfoT,
+  SceneFeatureT,
   ScenePreviews,
   TessellationCell,
   TessellationCellT,
@@ -763,4 +764,21 @@ export async function getTessellationCell(fetcher: $Fetch, tessellationName: str
   }
 
   return maybe.right;
+}
+
+
+// Endpoint: GET /features
+
+export async function getFeaturesInRange(fetcher: $Fetch, startTimestamp: number, endTimestamp: number): Promise<SceneFeatureT[]> {
+  const data = await fetcher(`/features`, { query: { start_date : startTimestamp, end_date: endTimestamp } });
+  checkForError(data);
+
+  const maybe = t.array(SceneFeature).decode(data);
+
+  if (isLeft(maybe)) {
+    throw new Error(`GET /features: API response did not match schema ${PathReporter.report(maybe).join("\n")}`);
+  }
+
+  return maybe.right;
+
 }
