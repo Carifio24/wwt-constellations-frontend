@@ -32,7 +32,7 @@ import {
 } from "~/utils/types";
 
 
-const { $backendAuthCall } = useNuxtApp();
+const { $backendCall } = useNuxtApp();
 
 definePageMeta({
   layout: 'admin'
@@ -41,7 +41,7 @@ definePageMeta({
 const isSuperuser = ref(true);  // TODO: Update this
 const superuserStatus = ref("unknown");
 
-const knownFeatures: Map<number, SceneFeatureT[]> = new Map();
+const knownFeatures: Record<number, SceneFeatureT[]> = reactive({});
 
 const date = ref(0);
 const calendarStartDate = ref(0);
@@ -66,8 +66,7 @@ function onCalendarPanelChange() {
 }
 
 async function fetchCurrentFeatures(): Promise<SceneFeatureT[]> {
-  const fetcher = await $backendAuthCall();
-  return getFeaturesInRange(fetcher, calendarStartDate.value, calendarEndDate.value);
+  return getFeaturesInRange($backendCall, calendarStartDate.value, calendarEndDate.value);
 }
 
 
@@ -82,10 +81,10 @@ onMounted(async () => {
   features.forEach(feature => {
     const featureTime = new Date(feature.feature_time);
     const dateTimestamp = stripTime(featureTime).getTime();
-    if (knownFeatures.has(dateTimestamp)) {
-      knownFeatures.get(dateTimestamp)?.push(feature);
+    if (dateTimestamp in knownFeatures) {
+      knownFeatures[dateTimestamp].push(feature);
     } else {
-      knownFeatures.set(dateTimestamp, [feature]);
+      knownFeatures[dateTimestamp] = [feature];
     }
   });
 });
