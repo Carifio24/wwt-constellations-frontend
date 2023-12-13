@@ -145,13 +145,6 @@ export const TessellationCell = t.type({
 
 export type TessellationCellT = t.TypeOf<typeof TessellationCell>;
 
-export const SceneFeature = t.type({
-  id: t.string,
-  feature_time: tc.date,
-  scene: SceneContentHydrated,
-});
-
-export type SceneFeatureT = t.TypeOf<typeof SceneFeature>;
 
 // Older types, potentially to be removed:
 
