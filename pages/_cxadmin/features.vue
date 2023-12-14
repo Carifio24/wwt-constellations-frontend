@@ -36,7 +36,24 @@
 
         <n-tab-pane name="queue" tab="Queue">
           <h3>Featured Scene Queue</h3>
-          <p>If there aren't any scenes schedules to be featured on a given day, we pull the top item from this queue.</p>
+          <p>If there aren't any scenes schedules to be featured on a given day, we pull the top item from this queue of scenes.</p>
+          <div
+            id="queue-container"
+          >
+            <n-card
+              v-for="scene in queue"
+            >
+              <template #cover>
+                <img :src="scene.previews.thumbnail">
+              </template>
+              <n-ellipsis
+                :tooltip="false"
+                line-clamp="4"
+              >
+                {{ scene.text }}
+              </n-ellipsis>
+            </n-card>
+          </div>
         </n-tab-pane>
       </n-tabs>
     </div>
@@ -46,6 +63,8 @@
 <script setup lang="ts">
 import {
   NCalendar,
+  NCard,
+  NEllipsis,
   NModal,
   NTabs,
   NTabPane,
@@ -55,10 +74,9 @@ import {
 import {
   amISuperuser,
   getFeaturesInRange,
-} from "~/utils/apis";
-
-import {
-  SceneFeatureT
+  getFeatureSceneQueue,
+  GetSceneResponseT,
+  SceneFeatureT,
 } from "~/utils/apis";
 
 
@@ -72,6 +90,7 @@ const isSuperuser = ref(true);  // TODO: Update this
 const superuserStatus = ref("unknown");
 
 let currentFeatures: Record<number, SceneFeatureT[]> = reactive({});
+let queue: GetSceneResponseT[] = [];
 
 const showModal = ref(false);
 
@@ -123,6 +142,8 @@ onBeforeMount(async () => {
     }
   });
   console.log(currentFeatures);
+
+  queue = await getFeatureSceneQueue($backendCall);
 });
 
 watch(timestamp, () => {
@@ -132,6 +153,10 @@ watch(timestamp, () => {
 </script>
 
 <style scoped lang="less">
+html {
+  background-color: none;
+}
+
 .n-calendar {
 
   margin: auto;
@@ -140,5 +165,18 @@ watch(timestamp, () => {
   .n-calendar-cell {
     background: red;
   }
+}
+
+.n-card {
+  max-height: 200px;
+  max-width: 50%;
+  margin: 5px;
+  overflow: hidden;
+}
+
+#queue-container {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
 }
 </style>

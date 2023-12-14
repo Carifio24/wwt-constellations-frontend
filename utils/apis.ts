@@ -777,7 +777,7 @@ export const SceneFeature = t.type({
 export type SceneFeatureT = t.TypeOf<typeof SceneFeature>;
 
 export const FeaturesResponse = t.type({
-  features: t.array(SceneFeature)
+  features: t.array(SceneFeature),
 });
 
 export async function getFeaturesInRange(fetcher: $Fetch, startTimestamp: number, endTimestamp: number): Promise<SceneFeatureT[]> {
@@ -793,4 +793,21 @@ export async function getFeaturesInRange(fetcher: $Fetch, startTimestamp: number
 
   return maybe.right.features;
 
+}
+
+export const FeatureQueueResponse = t.type({
+  scenes: t.array(GetSceneResponse),
+});
+
+export async function getFeatureSceneQueue(fetcher: $Fetch): Promise<GetSceneResponseT[]> {
+  const data = await fetcher(`/features/queue`);
+  checkForError(data);
+
+  const maybe = FeatureQueueResponse.decode(data);
+
+  if (isLeft(maybe)) {
+    throw new Error(`GET /features/queue: API response did not match schema ${PathReporter.report(maybe).join("\n")}`);
+  }
+
+  return maybe.right.scenes;
 }
