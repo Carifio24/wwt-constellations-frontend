@@ -14,7 +14,7 @@
           >
             <div>{{ year }}-{{ month }}-{{ day }}</div>
             <n-text
-              v-for="feature in currentFeatures[Date.UTC(year, month-1, day, 0, 0, 0)]"
+              v-for="feature in currentFeatures[(new Date(year, month-1, day, 0, 0, 0)).getTime()]"
               strong
               style="font-size: smaller;"
             >
@@ -135,7 +135,7 @@ const featureTime = ref(0);
 
 function stripTime(date: Date | number): Date {
   const d = new Date(date);
-  d.setUTCHours(0, 0, 0, 0);
+  d.setHours(0, 0, 0, 0);
   return d;
 }
 
@@ -145,9 +145,9 @@ function stripTime(date: Date | number): Date {
 // within the same month
 function onCalendarPanelChange() {
   const d = stripTime(timestamp.value);
-  d.setUTCDate(1);
+  d.setDate(1);
   calendarStartDate.value = d.getTime();
-  d.setUTCMonth(d.getUTCMonth() + 1);
+  d.setMonth(d.getMonth() + 1);
   calendarEndDate.value = d.getTime();
 }
 
