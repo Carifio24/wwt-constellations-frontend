@@ -811,3 +811,8 @@ export async function getFeatureSceneQueue(fetcher: $Fetch): Promise<GetSceneRes
 
   return maybe.right.scenes;
 }
+
+export async function updateFeatureQueue(fetcher: $Fetch, sceneIDs: string[]): Promise<void> {
+  const result = await fetcher(`/features/queue`, { method: 'POST', body: { scene_ids: sceneIDs } });
+  checkForError(result);
+}

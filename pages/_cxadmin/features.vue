@@ -30,30 +30,53 @@
             role="dialog"
             aria-modal="true"
           >
-          <n-text>MODAL</n-text>
+            <n-container>
+              <h4>
+                {{ `Scenes for ${(new Date(timestamp)).toDateString()}` }}
+              </h4>
+              <n-card
+                v-for="feature in currentFeatures[timestamp]"
+              >
+                <template #cover>
+                  <img :src="feature.scene.previews.thumbnail">
+                </template>
+                <n-ellipsis
+                  :tooltip="false"
+                  line-clamp="4"
+                >
+                  {{ feature.scene.text }}
+                </n-ellipsis>
+                <n-text>Change time for feature</n-text>
+                <n-date-picker
+                  type="datetime"
+                >
+                </n-date-picker>
+              </n-card>
+            </n-container>
           </n-modal>
         </n-tab-pane>
 
         <n-tab-pane name="queue" tab="Queue">
           <h3>Featured Scene Queue</h3>
           <p>If there aren't any scenes schedules to be featured on a given day, we pull the top item from this queue of scenes.</p>
-          <div
+          <Container
             id="queue-container"
+            @drop="onDrop"
           >
-            <n-card
-              v-for="scene in queue"
-            >
-              <template #cover>
-                <img :src="scene.previews.thumbnail">
-              </template>
-              <n-ellipsis
-                :tooltip="false"
-                line-clamp="4"
-              >
-                {{ scene.text }}
-              </n-ellipsis>
-            </n-card>
-          </div>
+            <Draggable v-for="scene in queue" :key="scene.id">
+              <n-card>
+                <template #cover>
+                  <img :src="scene.previews.thumbnail">
+                </template>
+                <n-ellipsis
+                  :tooltip="false"
+                  line-clamp="4"
+                >
+                  {{ scene.text }}
+                </n-ellipsis>
+              </n-card>
+            </Draggable>
+          </Container>
         </n-tab-pane>
       </n-tabs>
     </div>
@@ -62,8 +85,15 @@
 
 <script setup lang="ts">
 import {
+  Container,
+  Draggable,
+DropResult
+} from "vue3-smooth-dnd";
+
+import {
   NCalendar,
   NCard,
+  NDatePicker,
   NEllipsis,
   NModal,
   NTabs,
@@ -75,6 +105,7 @@ import {
   amISuperuser,
   getFeaturesInRange,
   getFeatureSceneQueue,
+  updateFeatureQueue,
   GetSceneResponseT,
   SceneFeatureT,
 } from "~/utils/apis";
@@ -90,7 +121,7 @@ const isSuperuser = ref(true);  // TODO: Update this
 const superuserStatus = ref("unknown");
 
 let currentFeatures: Record<number, SceneFeatureT[]> = reactive({});
-let queue: GetSceneResponseT[] = [];
+let queue: Ref<GetSceneResponseT[]> = ref([]);
 
 const showModal = ref(false);
 
@@ -100,6 +131,7 @@ const date = computed<Date>(() => {
 });
 const calendarStartDate = ref(0);
 const calendarEndDate = ref(0);
+const featureTime = ref(0);
 
 function stripTime(date: Date | number): Date {
   const d = new Date(date);
@@ -128,6 +160,27 @@ function handleChangeDate(ts: number) {
   timestamp.value = ts;
 }
 
+function onDrop(result: DropResult) {
+  queue.value = applyDrag(queue.value, result);
+  updateFeatureQueue($backendCall, queue.value.map(item => item.id));
+}
+
+function applyDrag(arr: GetSceneResponseT[], dragResult: DropResult) {
+  const { removedIndex, addedIndex, payload } = dragResult;
+
+  if (removedIndex === null && addedIndex === null) return arr;
+  const result = [...arr];
+  let itemToAdd = payload;
+  
+  if (removedIndex !== null) {
+    itemToAdd = result.splice(removedIndex, 1)[0];
+  }
+  if (addedIndex !== null) {
+    result.splice(addedIndex, 0, itemToAdd);
+  }
+  return result;
+}
+
 onBeforeMount(async () => {
   onCalendarPanelChange();
   currentFeatures = reactive({});
@@ -141,13 +194,11 @@ onBeforeMount(async () => {
       currentFeatures[dateTimestamp] = [feature];
     }
   });
-  console.log(currentFeatures);
 
-  queue = await getFeatureSceneQueue($backendCall);
+  queue.value = await getFeatureSceneQueue($backendCall);
 });
 
 watch(timestamp, () => {
-  console.log("HERE");
   showModal.value = true; 
 });
 </script>

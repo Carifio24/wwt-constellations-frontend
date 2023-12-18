@@ -28,6 +28,7 @@
     "vue-slider-component": "^4.1.0-beta.7",
     "vue-social-sharing": "next",
     "vue3-popper": "^1.5.0",
+    "vue3-smooth-dnd": "^0.0.6",
     "yallist": "^4.0.0"
   },
   "devDependencies": {

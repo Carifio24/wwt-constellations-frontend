@@ -2059,6 +2059,7 @@ __metadata:
     vue-slider-component: ^4.1.0-beta.7
     vue-social-sharing: next
     vue3-popper: ^1.5.0
+    vue3-smooth-dnd: ^0.0.6
     webpack: ^5.0.0
     yallist: ^4.0.0
   languageName: unknown
@@ -7587,6 +7588,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"smooth-dnd@npm:^0.12.1":
+  version: 0.12.1
+  resolution: "smooth-dnd@npm:0.12.1"
+  checksum: 533befb0552f04b2f27113436bf1851a2c672ebe8c384de3d65a2d87a86ce728cb5cfd8b039522252bf2cef66181d3ebaef92a5d6662184b1906acadd1568203
+  languageName: node
+  linkType: hard
+
 "socks-proxy-agent@npm:^7.0.0":
   version: 7.0.0
   resolution: "socks-proxy-agent@npm:7.0.0"
@@ -8636,6 +8644,17 @@ __metadata:
   peerDependencies:
     vue: ^3.2.20
   checksum: 56b6dfe28a9632c50c5062251aad8e32ef81c4e8fc23bd93b06b4e02f4c8f98ba1d9e51c4e16c516347659f322e989b2f57f6098cd312cce3d3e5beb5fd54748
+  languageName: node
+  linkType: hard
+
+"vue3-smooth-dnd@npm:^0.0.6":
+  version: 0.0.6
+  resolution: "vue3-smooth-dnd@npm:0.0.6"
+  dependencies:
+    smooth-dnd: ^0.12.1
+  peerDependencies:
+    vue: ^3.0.11
+  checksum: 85b8a01d3ff869c8f4570746dfe9c421699202f4aaf5dd6d0442e7e19707bef7bee178ff4949b8dea1bb43182333879f12a327e0bb715bc8b225cf774a3b4a19
   languageName: node
   linkType: hard
 
