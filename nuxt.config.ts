@@ -1,3 +1,13 @@
+import schedulerHook from "./hooks/cron";
+import { PublicRuntimeConfig } from "nuxt/schema";
+
+export const publicRuntimeConfig: PublicRuntimeConfig = {
+  apiUrl: "http://localhost:7000",
+  keycloakUrl: "http://localhost:8080/",
+  googleAnalyticsTag: "",
+  hostUrl: "http://localhost:3000"
+};
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   ssr: true,
@@ -37,12 +47,7 @@ export default defineNuxtConfig({
     }
   },
   runtimeConfig: {
-    public: {
-      apiUrl: "http://localhost:7000",
-      keycloakUrl: "http://localhost:8080/",
-      googleAnalyticsTag: "",
-      hostUrl: "http://localhost:3000"
-    }
+    public: publicRuntimeConfig,
   },
   app: {
     head: {
@@ -76,5 +81,10 @@ export default defineNuxtConfig({
       ],
     },
     isCookieIdVisible: false,
+  },
+  hooks: {
+    ready: () => {
+      schedulerHook();
+    }
   }
 });

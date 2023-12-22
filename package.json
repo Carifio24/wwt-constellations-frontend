@@ -9,6 +9,7 @@
     "@wwtelescope/engine-helpers": "^0.16",
     "@wwtelescope/engine-pinia": "^0.9",
     "@wwtelescope/engine-types": "^0.6.4",
+    "cron": "^3.1.6",
     "ellipsize": "^0.1",
     "escape-html": "^1.0.3",
     "femtotween": "^2.0.3",

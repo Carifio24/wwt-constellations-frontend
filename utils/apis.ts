@@ -5,9 +5,10 @@
 import { isLeft } from "fp-ts/lib/Either.js";
 import * as t from "io-ts";
 import { PathReporter } from "io-ts/lib/PathReporter.js";
-import { $Fetch } from "ofetch";
+import { $Fetch, FetchOptions } from "ofetch";
 
 import {
+  ImagePermissions,
   ImageStorage,
   ImageWwt,
   PlaceDetails,
@@ -87,8 +88,12 @@ export const MiscUpdateTimelineResponse = t.type({});
 
 export type MiscUpdateTimelineResponseT = t.TypeOf<typeof MiscUpdateTimelineResponse>;
 
-export async function miscUpdateTimeline(fetcher: $Fetch, initialId: string): Promise<MiscUpdateTimelineResponseT> {
-  return fetcher("/misc/update-timeline", { query: { "initial_id": initialId }, method: 'POST' }).then((data) => {
+export async function miscUpdateTimeline(fetcher: $Fetch, initialId?: string): Promise<MiscUpdateTimelineResponseT> {
+  const options: FetchOptions = { method: "POST" };
+  if (initialId) {
+    options.query = { "initial_id": initialId };
+  }
+  return fetcher("/misc/update-timeline", options).then((data) => {
     checkForError(data);
 
     const maybe = MiscUpdateTimelineResponse.decode(data);
@@ -813,6 +818,36 @@ export async function getFeatureSceneQueue(fetcher: $Fetch): Promise<GetSceneRes
 }
 
 export async function updateFeatureQueue(fetcher: $Fetch, sceneIDs: string[]): Promise<void> {
-  const result = await fetcher(`/features/queue`, { method: 'POST', body: { scene_ids: sceneIDs } });
-  checkForError(result);
+  const data = await fetcher(`/features/queue`, { method: 'POST', body: { scene_ids: sceneIDs } });
+  checkForError(data);
+}
+
+export const QueuedSceneResponse = t.type({
+  scene: GetSceneResponse,
+});
+
+export async function getNextQueuedScene(fetcher: $Fetch): Promise<GetSceneResponseT> {
+  const data = await fetcher(`/features/queue/next`);
+  checkForError(data);
+ 
+  const maybe = QueuedSceneResponse.decode(data);
+
+  if (isLeft(maybe)) {
+    throw new Error(`GET /features/queue/next: API response did not match schema ${PathReporter.report(maybe).join("\n")}`);
+  }
+
+  return maybe.right.scene;
+}
+
+export async function popNextQueuedScene(fetcher: $Fetch): Promise<GetSceneResponseT> {
+  const data = fetcher(`/features/queue/pop`, { method: "POST" });
+  checkForError(data);
+
+  const maybe = QueuedSceneResponse.decode(data);
+
+  if (isLeft(maybe)) {
+    throw new Error(`POST /features/queue/pop: API response did not match schema ${PathReporter.report(maybe).join("\n")}`);
+  }
+
+  return maybe.right.scene;
 }
