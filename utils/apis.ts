@@ -822,32 +822,3 @@ export async function updateFeatureQueue(fetcher: $Fetch, sceneIDs: string[]): P
   checkForError(data);
 }
 
-export const QueuedSceneResponse = t.type({
-  scene: GetSceneResponse,
-});
-
-export async function getNextQueuedScene(fetcher: $Fetch): Promise<GetSceneResponseT> {
-  const data = await fetcher(`/features/queue/next`);
-  checkForError(data);
- 
-  const maybe = QueuedSceneResponse.decode(data);
-
-  if (isLeft(maybe)) {
-    throw new Error(`GET /features/queue/next: API response did not match schema ${PathReporter.report(maybe).join("\n")}`);
-  }
-
-  return maybe.right.scene;
-}
-
-export async function popNextQueuedScene(fetcher: $Fetch): Promise<GetSceneResponseT> {
-  const data = fetcher(`/features/queue/pop`, { method: "POST" });
-  checkForError(data);
-
-  const maybe = QueuedSceneResponse.decode(data);
-
-  if (isLeft(maybe)) {
-    throw new Error(`POST /features/queue/pop: API response did not match schema ${PathReporter.report(maybe).join("\n")}`);
-  }
-
-  return maybe.right.scene;
-}
