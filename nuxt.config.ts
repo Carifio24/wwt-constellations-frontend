@@ -1,4 +1,3 @@
-import schedulerHook from "./hooks/cron";
 import { PublicRuntimeConfig } from "nuxt/schema";
 
 export const publicRuntimeConfig: PublicRuntimeConfig = {
@@ -82,9 +81,4 @@ export default defineNuxtConfig({
     },
     isCookieIdVisible: false,
   },
-  hooks: {
-    ready: () => {
-      schedulerHook();
-    }
-  }
 });
