@@ -30,7 +30,7 @@
             role="dialog"
             aria-modal="true"
           >
-            <n-container>
+            <div>
               <h4>
                 {{ `Scenes for ${(new Date(timestamp)).toDateString()}` }}
               </h4>
@@ -39,6 +39,11 @@
               >
                 <template #cover>
                   <img :src="feature.scene.previews.thumbnail">
+                  <n-button class="remove-button" @click="() => removeFeature(feature)" :bordered="false" aria-label="Remove feature button">
+                    <n-icon size="30">
+                      <CloseOutlined />
+                    </n-icon>
+                  </n-button>
                 </template>
                 <n-ellipsis
                   :tooltip="false"
@@ -48,11 +53,13 @@
                 </n-ellipsis>
                 <n-text>Change time for feature</n-text>
                 <n-date-picker
+                  :value="(new Date(feature.feature_time)).getTime()"
                   type="datetime"
+                  :on-update:value="(time: number) => updateFeatureTime(feature, time)"
                 >
                 </n-date-picker>
               </n-card>
-            </n-container>
+            </div>
           </n-modal>
         </n-tab-pane>
 
@@ -87,14 +94,20 @@
 import {
   Container,
   Draggable,
-DropResult
+  DropResult
 } from "vue3-smooth-dnd";
 
 import {
+  CloseOutlined
+} from "@vicons/material";
+
+import {
+  NButton,
   NCalendar,
   NCard,
   NDatePicker,
   NEllipsis,
+  NIcon,
   NModal,
   NTabs,
   NTabPane,
@@ -103,7 +116,9 @@ import {
 
 import {
   amISuperuser,
+  deleteFeature,
   getFeaturesInRange,
+  updateFeature,
   getFeatureSceneQueue,
   updateFeatureQueue,
   GetSceneResponseT,
@@ -111,14 +126,13 @@ import {
 } from "~/utils/apis";
 
 
-const { $backendCall } = useNuxtApp();
+const { $backendAuthCall, $keycloak } = useNuxtApp();
 
 definePageMeta({
   layout: 'admin'
 });
 
-const isSuperuser = ref(true);  // TODO: Update this
-const superuserStatus = ref("unknown");
+const isSuperuser = ref(false); 
 
 let currentFeatures: Record<number, SceneFeatureT[]> = reactive({});
 let queue: Ref<GetSceneResponseT[]> = ref([]);
@@ -152,7 +166,8 @@ function onCalendarPanelChange() {
 }
 
 async function fetchCurrentFeatures(): Promise<SceneFeatureT[]> {
-  return getFeaturesInRange($backendCall, calendarStartDate.value, calendarEndDate.value);
+  const fetcher = await $backendAuthCall();
+  return getFeaturesInRange(fetcher, calendarStartDate.value, calendarEndDate.value);
 }
 
 
@@ -160,9 +175,49 @@ function handleChangeDate(ts: number) {
   timestamp.value = ts;
 }
 
-function onDrop(result: DropResult) {
+async function updateFeatureTime(feature: SceneFeatureT, time: number) {
+  console.log("Feature time changed");
+  const fetcher = await $backendAuthCall();
+  const update = { feature_time: time };
+  try {
+    await updateFeature(fetcher, feature.id, update); 
+    const newDate = new Date(time);
+    feature.feature_time = newDate.toISOString();
+    const newFeatureDate = stripTime(newDate).getTime();
+    if (newFeatureDate !== timestamp.value) {
+      if (newFeatureDate in currentFeatures) {
+        currentFeatures[newFeatureDate].push(feature);
+      } else {
+        currentFeatures[newFeatureDate] = [feature];
+      }
+      const idx = currentFeatures[timestamp.value].indexOf(feature);
+      if (idx >= 0) {
+        currentFeatures[timestamp.value].splice(idx, 1);
+      }
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function removeFeature(feature: SceneFeatureT) {
+  try {
+    const fetcher = await $backendAuthCall();
+    await deleteFeature(fetcher, feature.id);
+    const idx = currentFeatures[timestamp.value].indexOf(feature);
+    if (idx >= 0) {
+      currentFeatures[timestamp.value].splice(idx, 1);
+    }
+  } catch (err) {
+    console.error(err);
+  }
+  
+}
+
+async function onDrop(result: DropResult) {
+  const fetcher = await $backendAuthCall();
   queue.value = applyDrag(queue.value, result);
-  updateFeatureQueue($backendCall, queue.value.map(item => item.id));
+  updateFeatureQueue(fetcher, queue.value.map(item => item.id));
 }
 
 function applyDrag(arr: GetSceneResponseT[], dragResult: DropResult) {
@@ -181,7 +236,9 @@ function applyDrag(arr: GetSceneResponseT[], dragResult: DropResult) {
   return result;
 }
 
-onBeforeMount(async () => {
+onMounted(async () => {
+
+  setTimeout(async () => {
   onCalendarPanelChange();
   currentFeatures = reactive({});
   const features = await fetchCurrentFeatures();
@@ -195,7 +252,16 @@ onBeforeMount(async () => {
     }
   });
 
-  queue.value = await getFeatureSceneQueue($backendCall);
+  const fetcher = await $backendAuthCall();
+  queue.value = await getFeatureSceneQueue(fetcher);
+
+  try {
+    const resp = await amISuperuser(fetcher);
+    isSuperuser.value = resp.result;
+  } catch (err) {
+    isSuperuser.value = false;
+  }
+  }, 3000);
 });
 
 watch(timestamp, () => {
@@ -203,7 +269,7 @@ watch(timestamp, () => {
 });
 </script>
 
-<style scoped lang="less">
+<style lang="less">
 html {
   background-color: none;
 }
@@ -213,9 +279,6 @@ html {
   margin: auto;
   width: 60rem;
 
-  .n-calendar-cell {
-    background: red;
-  }
 }
 
 .n-card {
@@ -223,6 +286,16 @@ html {
   max-width: 50%;
   margin: 5px;
   overflow: hidden;
+  background: black;
+
+  .n-card-cover {
+    display: flex;
+    flex-direction: row;
+  }
+}
+
+.n-button {
+  cursor: pointer;
 }
 
 #queue-container {

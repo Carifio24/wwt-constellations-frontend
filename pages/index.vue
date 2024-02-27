@@ -4,7 +4,6 @@
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { nextTick } from "vue";
 
 import { useConstellationsStore } from "~/stores/constellations";
 
