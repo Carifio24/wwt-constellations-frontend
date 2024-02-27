@@ -18,6 +18,7 @@ import {
   TessellationCell,
   TessellationCellT,
 } from "./types";
+import { id } from "fp-ts/lib/Refinement";
 
 function checkForError(item: any) {
   if (typeof item.error === "boolean" && item.error) {
@@ -819,6 +820,22 @@ export async function getFeatureSceneQueue(fetcher: $Fetch): Promise<GetSceneRes
 
 export async function updateFeatureQueue(fetcher: $Fetch, sceneIDs: string[]): Promise<void> {
   const data = await fetcher(`/features/queue`, { method: 'POST', body: { scene_ids: sceneIDs } });
+  checkForError(data);
+}
+
+export const FeatureUpdateRequest = t.partial({
+  feature_time: t.number,
+});
+
+export type FeatureUpdateRequestT = t.TypeOf<typeof FeatureUpdateRequest>;
+
+export async function updateFeature(fetcher: $Fetch, featureID: string, update: FeatureUpdateRequestT): Promise<void> {
+  const data = await fetcher(`/features/${featureID}`, { method: 'PATCH', body: update });
+  checkForError(data);
+}
+
+export async function deleteFeature(fetcher: $Fetch, featureID: string): Promise<void> {
+  const data = await fetcher(`/features/${featureID}`, { method: 'DELETE' });
   checkForError(data);
 }
 
