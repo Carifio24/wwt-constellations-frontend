@@ -782,6 +782,39 @@ export const SceneFeature = t.type({
 
 export type SceneFeatureT = t.TypeOf<typeof SceneFeature>;
 
+export const GetFeatureResponse = t.type({
+  feature: SceneFeature
+});
+
+export async function getFeature(fetcher: $Fetch, sceneID: string): Promise<SceneFeatureT> {
+  const data = await fetcher(`/feature/${sceneID}`);
+  checkForError(data);
+
+  const maybe = GetFeatureResponse.decode(data);
+  if (isLeft(maybe)) {
+    throw new Error(`GET /feature/:id: API response did not match schema ${PathReporter.report(maybe).join("\n")}`);
+  }
+
+  return maybe.right.feature;
+}
+
+export const CreateFeatureResponse = t.type({
+  id: t.string
+});
+
+export async function createFeature(fetcher: $Fetch, sceneID: string, time: Date): Promise<string> {
+  const data = await fetcher(`/feature`, { method: 'POST', body: { scene_id: sceneID, feature_time: time } });
+  checkForError(data);
+
+  const maybe = CreateFeatureResponse.decode(data);
+
+  if (isLeft(maybe)) {
+    throw new Error(`POST /feature: API response did not match schema ${PathReporter.report(maybe).join("\n")}`);
+  }
+
+  return maybe.right.id;
+}
+
 export const FeaturesResponse = t.type({
   features: t.array(SceneFeature),
 });
