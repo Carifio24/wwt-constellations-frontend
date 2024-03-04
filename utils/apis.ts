@@ -787,7 +787,7 @@ export const GetFeatureResponse = t.type({
 });
 
 export async function getFeature(fetcher: $Fetch, sceneID: string): Promise<SceneFeatureT> {
-  const data = await fetcher(`/feature/${sceneID}`);
+  const data = await fetcher(`/features/${sceneID}`);
   checkForError(data);
 
   const maybe = GetFeatureResponse.decode(data);
@@ -802,8 +802,8 @@ export const CreateFeatureResponse = t.type({
   id: t.string
 });
 
-export async function createFeature(fetcher: $Fetch, sceneID: string, time: Date): Promise<string> {
-  const data = await fetcher(`/feature`, { method: 'POST', body: { scene_id: sceneID, feature_time: time } });
+export async function createFeature(fetcher: $Fetch, sceneID: string, timestamp: number): Promise<string> {
+  const data = await fetcher(`/feature`, { method: 'POST', body: { scene_id: sceneID, feature_time: timestamp } });
   checkForError(data);
 
   const maybe = CreateFeatureResponse.decode(data);

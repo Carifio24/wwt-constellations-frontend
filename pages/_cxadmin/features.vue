@@ -6,6 +6,29 @@
       <n-tabs default-value="scheduled">
         <n-tab-pane name="scheduled" tab="Scheduled">
           <h3>Current scheduled scenes</h3>
+          <n-button @click="showAddFeatureModal = true">
+            <p>Add a feature</p>
+          </n-button>
+          <n-modal
+            v-model:show="showAddFeatureModal"
+            title="Add a feature"
+            size="larger"
+          >
+            <n-card>
+              <n-input
+                v-model:value="addFeatureSceneID"
+                type="text"
+                placeholder="Enter scene ID"
+              >
+              </n-input>
+              <n-date-picker
+                v-model:value="addFeatureTime"
+                type="datetime"
+              >
+              </n-date-picker>
+              <n-button @click="addFeature(addFeatureSceneID, addFeatureTime)">Add feature</n-button>
+            </n-card>
+          </n-modal>
           <n-calendar
             v-model="timestamp"
             #="{ year, month, date: day }"
@@ -14,58 +37,68 @@
           >
             <div>{{ year }}-{{ month }}-{{ day }}</div>
             <n-text
-              v-for="feature in currentFeatures[(new Date(year, month-1, day, 0, 0, 0)).getTime()]"
-              strong
-              style="font-size: smaller;"
+              v-if="currentFeatures[(new Date(year, month-1, day, 0, 0, 0)).getTime()]?.length > 0"
             >
-              {{ (new Date(feature.feature_time)).toLocaleTimeString() }}
+              {{ `${currentFeatures[(new Date(year, month-1, day, 0, 0, 0)).getTime()]?.length} feature(s) scheduled` }}
             </n-text>
           </n-calendar>
 
           <n-modal
-            v-model:show="showModal"
+            v-model:show="showDateFeaturesModal"
             :title="`Features for ${date.toLocaleDateString()}`"
-            :bordered="false"
-            size="huge"
+            size="large"
             role="dialog"
             aria-modal="true"
           >
-            <div>
+            <n-card>
               <h4>
                 {{ `Scenes for ${(new Date(timestamp)).toDateString()}` }}
               </h4>
-              <n-card
-                v-for="feature in currentFeatures[timestamp]"
-              >
-                <template #cover>
-                  <img :src="feature.scene.previews.thumbnail">
-                  <n-button class="remove-button" @click="() => removeFeature(feature)" :bordered="false" aria-label="Remove feature button">
-                    <n-icon size="30">
-                      <CloseOutlined />
-                    </n-icon>
-                  </n-button>
-                </template>
-                <n-ellipsis
-                  :tooltip="false"
-                  line-clamp="4"
+                <n-card
+                  v-for="feature in currentFeatures[timestamp]"
+                  class="feature-item"
                 >
-                  {{ feature.scene.text }}
-                </n-ellipsis>
-                <n-text>Change time for feature</n-text>
-                <n-date-picker
-                  :value="(new Date(feature.feature_time)).getTime()"
-                  type="datetime"
-                  :on-update:value="(time: number) => updateFeatureTime(feature, time)"
-                >
-                </n-date-picker>
-              </n-card>
-            </div>
+                  <template #cover>
+                    <n-button
+                      class="remove-button"
+                      @click="() => removeFeature(feature)"
+                      :bordered="false"
+                      aria-label="Remove feature button"
+                    >
+                      <n-icon size="30">
+                        <CloseOutlined />
+                      </n-icon>
+                    </n-button>
+                  </template>
+                  <p>{{ `@${feature.scene.handle.display_name}` }}</p>
+                  <n-ellipsis
+                    :tooltip="false"
+                    line-clamp="4"
+                    class="feature-text"
+                  >
+                    {{ feature.scene.text }}
+                  </n-ellipsis>
+                  <n-text>Change time for feature</n-text>
+                  <n-date-picker
+                    :value="(new Date(feature.feature_time)).getTime()"
+                    type="datetime"
+                    :on-update:value="(time: number) => updateFeatureTime(feature, time)"
+                  >
+                  </n-date-picker>
+                </n-card>
+            </n-card>
           </n-modal>
         </n-tab-pane>
 
         <n-tab-pane name="queue" tab="Queue">
           <h3>Featured Scene Queue</h3>
           <p>If there aren't any scenes schedules to be featured on a given day, we pull the top item from this queue of scenes.</p>
+             <n-button class="queue-add-button" @click="() => showAddQueueSceneModal = true" :bordered="false" aria-label="Remove feature button">
+               <n-icon size="30">
+                 <AddRound />
+               </n-icon>
+               Add a scene to the queue
+             </n-button>
           <Container
             id="queue-container"
             @drop="onDrop"
@@ -84,9 +117,35 @@
               </n-card>
             </Draggable>
           </Container>
+          <n-modal
+            v-model:show="showAddQueueSceneModal"
+            title="Select scene to add"
+            size="large"
+            role="dialog"
+            aria-modal="true"
+          >
+            <n-card>
+              <n-input
+                v-model:value="addToQueueSceneID"
+                type="text"
+                placeholder="Enter scene ID"
+              >
+              </n-input>
+              <div class="button-row">
+                <n-button @click="() => addSceneToQueue(addToQueueSceneID)">Add to queue</n-button>
+              </div>
+            </n-card>
+          </n-modal>
         </n-tab-pane>
       </n-tabs>
     </div>
+    <n-spin v-else
+      size="large"
+    >
+      <template #description>
+        Verifying superuser status and loading features
+      </template>
+    </n-spin>
   </div>
 </template>
 
@@ -98,6 +157,7 @@ import {
 } from "vue3-smooth-dnd";
 
 import {
+  AddRound,
   CloseOutlined
 } from "@vicons/material";
 
@@ -108,7 +168,9 @@ import {
   NDatePicker,
   NEllipsis,
   NIcon,
+  NInput,
   NModal,
+  NSpin,
   NTabs,
   NTabPane,
   NText,
@@ -116,6 +178,7 @@ import {
 
 import {
   amISuperuser,
+  createFeature,
   deleteFeature,
   getFeaturesInRange,
   updateFeature,
@@ -125,11 +188,20 @@ import {
   SceneFeatureT,
 } from "~/utils/apis";
 
+import { storeToRefs } from "pinia";
 
-const { $backendAuthCall, $keycloak } = useNuxtApp();
+import { useConstellationsStore } from "~/stores/constellations";
+
+const { $backendAuthCall } = useNuxtApp();
+const notification = useNotification();
+const constellationsStore = useConstellationsStore();
+const {
+  loggedIn,
+} = storeToRefs(constellationsStore);
 
 definePageMeta({
-  layout: 'admin'
+  layout: 'admin',
+  middleware: ['handle-superuser'],
 });
 
 const isSuperuser = ref(false); 
@@ -137,7 +209,12 @@ const isSuperuser = ref(false);
 let currentFeatures: Record<number, SceneFeatureT[]> = reactive({});
 let queue: Ref<GetSceneResponseT[]> = ref([]);
 
-const showModal = ref(false);
+const showDateFeaturesModal = ref(false);
+const showAddQueueSceneModal = ref(false);
+const showAddFeatureModal = ref(false);
+const addFeatureTime = ref(new Date().getTime());
+const addFeatureSceneID = ref("");
+const addToQueueSceneID = ref("");
 
 const timestamp = ref(new Date().getTime());
 const date = computed<Date>(() => {
@@ -145,7 +222,7 @@ const date = computed<Date>(() => {
 });
 const calendarStartDate = ref(0);
 const calendarEndDate = ref(0);
-const featureTime = ref(0);
+
 
 function stripTime(date: Date | number): Date {
   const d = new Date(date);
@@ -175,6 +252,25 @@ function handleChangeDate(ts: number) {
   timestamp.value = ts;
 }
 
+function addToCurrentFeatures(feature: SceneFeatureT) {
+  const featureTime = new Date(feature.feature_time);
+  const time = stripTime(featureTime).getTime();
+  if (time in currentFeatures) {
+    currentFeatures[time].push(feature);
+  } else {
+    currentFeatures[time] = [feature];
+  }
+}
+
+function removeFromCurrentFeatures(feature: SceneFeatureT) {
+    const featureTime = new Date(feature.feature_time);
+    const time = stripTime(featureTime).getTime();
+    const idx = currentFeatures[time].indexOf(feature);
+    if (idx >= 0) {
+      currentFeatures[time].splice(idx, 1);
+    }
+}
+
 async function updateFeatureTime(feature: SceneFeatureT, time: number) {
   console.log("Feature time changed");
   const fetcher = await $backendAuthCall();
@@ -183,19 +279,23 @@ async function updateFeatureTime(feature: SceneFeatureT, time: number) {
     await updateFeature(fetcher, feature.id, update); 
     const newDate = new Date(time);
     feature.feature_time = newDate.toISOString();
-    const newFeatureDate = stripTime(newDate).getTime();
-    if (newFeatureDate !== timestamp.value) {
-      if (newFeatureDate in currentFeatures) {
-        currentFeatures[newFeatureDate].push(feature);
-      } else {
-        currentFeatures[newFeatureDate] = [feature];
-      }
-      const idx = currentFeatures[timestamp.value].indexOf(feature);
-      if (idx >= 0) {
-        currentFeatures[timestamp.value].splice(idx, 1);
-      }
-    }
+    removeFromCurrentFeatures(feature);
+    addToCurrentFeatures(feature);
   } catch (err) {
+    console.error(err);
+  }
+}
+
+async function addFeature(sceneID: string, time: number) {
+  try {
+    const fetcher = await $backendAuthCall();
+    const id = await createFeature(fetcher, sceneID, time);
+    const feature = await getFeature(fetcher, id);
+    addToCurrentFeatures(feature);
+    showAddFeatureModal.value = false;
+    notification.success({ content: "Feature created.", duration: 3000 });
+  } catch (err) {
+    notification.error({ content: "Error creating feature.", duration: 3000 });
     console.error(err);
   }
 }
@@ -204,14 +304,31 @@ async function removeFeature(feature: SceneFeatureT) {
   try {
     const fetcher = await $backendAuthCall();
     await deleteFeature(fetcher, feature.id);
-    const idx = currentFeatures[timestamp.value].indexOf(feature);
-    if (idx >= 0) {
-      currentFeatures[timestamp.value].splice(idx, 1);
-    }
+    removeFromCurrentFeatures(feature);
+    notification.success({ content: "Feature removed.", duration: 3000 });
   } catch (err) {
+    notification.error({ content: "Error removing feature.", duration: 3000 });
     console.error(err);
   }
-  
+}
+
+async function addSceneToQueue(sceneID: string) {
+  const fetcher = await $backendAuthCall();
+  const scene = await getScene(fetcher, sceneID);
+  if (scene === null) {
+    notification.error({ content: "Invalid scene ID.", duration: 3000 });
+    return;
+  }
+  const queueToTry = queue.value.map(scene => scene.id);
+  queueToTry.push(sceneID);
+  try {
+    await updateFeatureQueue(fetcher, queueToTry); 
+    queue.value.push(scene);
+    notification.success({ content: "Scene added to front of queue.", duration: 3000 });
+  } catch (err) {
+    notification.error({ content: "Error adding scene to queue.", duration: 3000 }); 
+  }
+
 }
 
 async function onDrop(result: DropResult) {
@@ -236,36 +353,32 @@ function applyDrag(arr: GetSceneResponseT[], dragResult: DropResult) {
   return result;
 }
 
-onMounted(async () => {
-
-  setTimeout(async () => {
-  onCalendarPanelChange();
-  currentFeatures = reactive({});
-  const features = await fetchCurrentFeatures();
-  features.forEach(feature => {
-    const featureTime = new Date(feature.feature_time);
-    const dateTimestamp = stripTime(featureTime).getTime();
-    if (dateTimestamp in currentFeatures) {
-      currentFeatures[dateTimestamp].push(feature);
+watch(
+  loggedIn,
+  async (newLoggedIn) => {
+    if (!newLoggedIn) {
+      isSuperuser.value = false;
     } else {
-      currentFeatures[dateTimestamp] = [feature];
+      const fetcher = await $backendAuthCall();
+      isSuperuser.value = (await amISuperuser(fetcher)).result;
+      if (!isSuperuser.value) {
+        return;
+      }
+
+      onCalendarPanelChange();
+      currentFeatures = reactive({});
+      const features = await fetchCurrentFeatures();
+      features.forEach(feature => {
+        addToCurrentFeatures(feature);
+      });
+      queue.value = await getFeatureSceneQueue(fetcher);
     }
-  });
-
-  const fetcher = await $backendAuthCall();
-  queue.value = await getFeatureSceneQueue(fetcher);
-
-  try {
-    const resp = await amISuperuser(fetcher);
-    isSuperuser.value = resp.result;
-  } catch (err) {
-    isSuperuser.value = false;
-  }
-  }, 3000);
-});
+  },
+  { immediate: true }
+);
 
 watch(timestamp, () => {
-  showModal.value = true; 
+  showDateFeaturesModal.value = true; 
 });
 </script>
 
@@ -282,10 +395,9 @@ html {
 }
 
 .n-card {
-  max-height: 200px;
-  max-width: 50%;
-  margin: 5px;
-  overflow: hidden;
+
+  max-height: 90vh;
+  width: 70%;
   background: black;
 
   .n-card-cover {
@@ -302,5 +414,18 @@ html {
   display: flex;
   align-items: center;
   flex-direction: column;
+}
+
+.feature-item {
+  width: 100%;
+  
+  .n-card__content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .remove-button {
+    margin-left: auto;
+  }
 }
 </style>
