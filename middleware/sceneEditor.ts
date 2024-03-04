@@ -3,7 +3,7 @@
 // A middleware to redirect the user away if they don't have permissions to edit
 // the current scene, as identified by a URL parameter `id`.
 
-import { permissionsMiddleware } from "./permissionsMiddlewareBase";
+import { permissionsMiddleware } from "./permissionsMiddleware";
 import { scenePermissions } from "~/utils/apis";
 
 export default permissionsMiddleware(

@@ -4,7 +4,7 @@
 // on the current handle. Assumes that there is a URL parameter `handle` that
 // (should) correspond to a handle.
 
-import { permissionsMiddleware } from "./permissionsMiddlewareBase";
+import { permissionsMiddleware } from "./permissionsMiddleware";
 import { handlePermissions } from "~/utils/apis";
 
 export default permissionsMiddleware(

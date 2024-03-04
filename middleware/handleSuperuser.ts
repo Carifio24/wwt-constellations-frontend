@@ -2,7 +2,7 @@
 
 // A middleware to redirect the user away if they don't have superuser permissions.
 
-import { permissionsMiddleware } from "./permissionsMiddlewareBase";
+import { permissionsMiddleware } from "./permissionsMiddleware";
 import { amISuperuser } from "~/utils/apis";
 
 export default permissionsMiddleware(
