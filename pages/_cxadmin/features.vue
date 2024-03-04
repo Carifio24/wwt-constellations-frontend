@@ -235,7 +235,7 @@ function stripTime(date: Date | number): Date {
 // They'll only need to update when the panel changes, but `date` can change
 // within the same month
 function onCalendarPanelChange(info?: { year: number, month: number }) {
-  const d = info !== undefined ? new Date(info.year, info.month) : new Date(timestamp.value);
+  const d = info !== undefined ? new Date(info.year, info.month - 1) : new Date(timestamp.value);
   calendarStartDate.value = d.getTime();
   d.setMonth(d.getMonth() + 1);
   calendarEndDate.value = d.getTime();

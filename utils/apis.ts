@@ -18,7 +18,6 @@ import {
   TessellationCell,
   TessellationCellT,
 } from "./types";
-import { id } from "fp-ts/lib/Refinement";
 
 function checkForError(item: any) {
   if (typeof item.error === "boolean" && item.error) {
@@ -822,7 +821,6 @@ export const FeaturesResponse = t.type({
 export async function getFeaturesInRange(fetcher: $Fetch, startTimestamp: number, endTimestamp: number): Promise<SceneFeatureT[]> {
   const data = await fetcher(`/features`, { query: { start_date : startTimestamp, end_date: endTimestamp } });
   checkForError(data);
-  console.log(data);
 
   const maybe = FeaturesResponse.decode(data);
 
