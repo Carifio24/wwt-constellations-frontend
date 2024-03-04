@@ -12,9 +12,13 @@
           <n-modal
             v-model:show="showAddFeatureModal"
             title="Add a feature"
-            size="larger"
           >
-            <n-card>
+            <n-card
+              class="add-feature-card"
+              size="medium"
+              role="dialog"
+              aria-modal="true"
+            >
               <n-input
                 v-model:value="addFeatureSceneID"
                 type="text"
@@ -52,7 +56,10 @@
           >
             <n-card>
               <h4>
-                {{ `Scenes for ${(new Date(timestamp)).toDateString()}` }}
+                {{ currentFeatures[timestamp]?.length > 0 ?
+                  `Scenes for ${(new Date(timestamp)).toDateString()}` :
+                  `No scenes for ${(new Date(timestamp)).toDateString()}`
+                }}
               </h4>
                 <n-card
                   v-for="feature in currentFeatures[timestamp]"
@@ -377,10 +384,6 @@ watch(
 </script>
 
 <style lang="less">
-html {
-  background-color: none;
-}
-
 .n-calendar {
 
   margin: auto;
@@ -392,12 +395,15 @@ html {
 
   max-height: 90vh;
   width: 70%;
-  background: black;
 
   .n-card-cover {
     display: flex;
     flex-direction: row;
   }
+}
+
+.add-feature-card {
+  max-width: max(40%, 250px);
 }
 
 .n-button {
