@@ -801,6 +801,7 @@ export const CreateFeatureResponse = t.type({
   id: t.string
 });
 
+// The timestamp should be a Unix timestamp
 export async function createFeature(fetcher: $Fetch, sceneID: string, timestamp: number): Promise<string> {
   const data = await fetcher(`/feature`, { method: 'POST', body: { scene_id: sceneID, feature_time: timestamp } });
   checkForError(data);
@@ -818,6 +819,8 @@ export const FeaturesResponse = t.type({
   features: t.array(SceneFeature),
 });
 
+
+// The start and end timestamps should be Unix timestamps
 export async function getFeaturesInRange(fetcher: $Fetch, startTimestamp: number, endTimestamp: number): Promise<SceneFeatureT[]> {
   const data = await fetcher(`/features`, { query: { start_date : startTimestamp, end_date: endTimestamp } });
   checkForError(data);
