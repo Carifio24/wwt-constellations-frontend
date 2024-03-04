@@ -70,7 +70,7 @@
                       </n-icon>
                     </n-button>
                   </template>
-                  <p>{{ `@${feature.scene.handle.display_name}` }}</p>
+                  <p>{{ `@${feature.scene.handle.handle}` }}</p>
                   <n-ellipsis
                     :tooltip="false"
                     line-clamp="4"
