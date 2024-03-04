@@ -30,7 +30,7 @@
             </n-card>
           </n-modal>
           <n-calendar
-            v-model="timestamp"
+            v-model:value="timestamp"
             #="{ year, month, date: day }"
             :on-panel-change="onCalendarPanelChange"
             @update:value="handleChangeDate"
@@ -234,22 +234,24 @@ function stripTime(date: Date | number): Date {
 // rather than as computed values based on `date`.
 // They'll only need to update when the panel changes, but `date` can change
 // within the same month
-function onCalendarPanelChange() {
-  const d = stripTime(timestamp.value);
-  d.setDate(1);
+function onCalendarPanelChange(info?: { year: number, month: number }) {
+  const d = info !== undefined ? new Date(info.year, info.month) : new Date(timestamp.value);
   calendarStartDate.value = d.getTime();
   d.setMonth(d.getMonth() + 1);
   calendarEndDate.value = d.getTime();
+  addCurrentPanelFeatures();
 }
 
-async function fetchCurrentFeatures(): Promise<SceneFeatureT[]> {
+async function addCurrentPanelFeatures(): Promise<void> {
   const fetcher = await $backendAuthCall();
-  return getFeaturesInRange(fetcher, calendarStartDate.value, calendarEndDate.value);
+  const features = await getFeaturesInRange(fetcher, calendarStartDate.value, calendarEndDate.value);
+  features.forEach(feature => {
+    addToCurrentFeatures(feature);
+  });
 }
 
-
-function handleChangeDate(ts: number) {
-  timestamp.value = ts;
+function handleChangeDate(_ts: number) {
+  showDateFeaturesModal.value = true;
 }
 
 function addToCurrentFeatures(feature: SceneFeatureT) {
@@ -365,21 +367,13 @@ watch(
         return;
       }
 
-      onCalendarPanelChange();
       currentFeatures = reactive({});
-      const features = await fetchCurrentFeatures();
-      features.forEach(feature => {
-        addToCurrentFeatures(feature);
-      });
+      onCalendarPanelChange();
       queue.value = await getFeatureSceneQueue(fetcher);
     }
   },
   { immediate: true }
 );
-
-watch(timestamp, () => {
-  showDateFeaturesModal.value = true; 
-});
 </script>
 
 <style lang="less">
