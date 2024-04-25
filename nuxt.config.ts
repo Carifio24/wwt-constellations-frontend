@@ -32,10 +32,7 @@ export default defineNuxtConfig({
             "@wwtelescope/astro"
           ]),
   },
-  modules: [
-    '@vueuse/nuxt',
-    '@dargmuesli/nuxt-cookie-control'
-  ],
+  modules: ['@vueuse/nuxt', '@dargmuesli/nuxt-cookie-control', "nuxt-oidc-auth"],
   builder: "webpack",
   vite: {
     // magic needed by naive-ui:
@@ -81,5 +78,20 @@ export default defineNuxtConfig({
       ],
     },
     isCookieIdVisible: false,
+  },
+  oidc: {
+    defaultProvider: "keycloak",
+    providers: {
+      keycloak: {
+        clientId: process.env.NUXT_OIDC_PROVIDERS_KEYCLOAK_CLIENT_ID ?? "",
+        clientSecret: process.env.NUXT_OIDC_PROVIDERS_KEYCLOAK_CLIENT_SECRET ?? "",
+        baseUrl: process.env.NUXT_OIDC_PROVIDERS_KEYCLOAK_BASE_URL ?? "",
+        redirectUri: process.env.NUXT_OIDC_PROVIDERS_KEYCLOAK_REDIRECT_URI ?? "",
+      },
+    },
+    middleware: {
+      globalMiddlewareEnabled: false,
+      customLoginPage: false,
+    }
   },
 });
