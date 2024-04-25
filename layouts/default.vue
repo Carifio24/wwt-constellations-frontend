@@ -100,6 +100,9 @@
 </template>
 
 <script setup lang="ts">
+console.log("In setup");
+const where = process.client ? "client" : "server";
+console.log(`On: ${where}`);
 import * as screenfull from "screenfull";
 import { storeToRefs } from "pinia";
 import { ref } from "vue";
@@ -138,6 +141,10 @@ const { isMobile, loggedIn } = storeToRefs(constellationsStore);
 
 const { $keycloak } = useNuxtApp();
 
+const { login, logout, user } = useOidcAuth();
+console.log(`Logged in: ${loggedIn.value}`);
+console.log(`User: ${user.value?.userName}`);
+
 const drawer = ref(false)
 const placement = ref<DrawerPlacement>('left')
 const menuItems: Array<MenuItem> = [
@@ -154,6 +161,7 @@ interface MenuItem {
   url: string
 }
 
+
 function logInOut() {
   if (!process.client) {
     return;
@@ -162,22 +170,9 @@ function logInOut() {
   if (loggedIn.value) {
     // It would be nice to redirect to the current path, but since redirect URLs
     // have to belong to a specific list, that's not generically possible.
-    $keycloak.logout({
-      redirectUri: makeRedirectUrl(window.location, "/"),
-    }).then(() => {
-      loggedIn.value = false;
-    }).catch((error: Error) => {
-      console.log(`Error logging out: ${error.message}`);
-    });
+    logout("keycloak");
   } else {
-    $keycloak.login({
-      redirectUri: makeRedirectUrl(window.location, "/"),
-      prompt: 'login'
-    }).then(() => {
-      loggedIn.value = true;
-    }).catch((error: Error) => {
-      console.log(`Error logging in: ${error.message}`);
-    });
+    login("keycloak");
   }
 }
 

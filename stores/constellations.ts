@@ -6,9 +6,10 @@ import Yallist from "yallist";
 import { getHomeTimeline, getHandleTimeline, type GetSceneResponseT, type TimelineResponseT } from "~/utils/apis";
 import { type SceneDisplayInfoT } from "~/utils/types";
 
+
 export const useConstellationsStore = defineStore("wwt-constellations", () => {
   // Whether the user is logged in.
-  const loggedIn = ref(false);
+  const { loggedIn } = useOidcAuth();
 
   // Whether we seem to be in a mobile layout
 
