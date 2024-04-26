@@ -45,14 +45,14 @@ onMounted(() => {
   // See the example of silent SSO checking at
   // https://www.keycloak.org/docs/latest/securing_apps/index.html#_javascript_adapter
 
-  if (!$keycloak.refreshToken) {
-    $keycloak.init({
-      onLoad: "check-sso",
-      silentCheckSsoRedirectUri: makeRedirectUrl(window.location, "/silent-check-sso"),
-    }).then(() => {
-      loggedIn.value = $keycloak.authenticated ?? false;
-    });
-  }
+  // if (!$keycloak.refreshToken) {
+  //   $keycloak.init({
+  //     onLoad: "check-sso",
+  //     silentCheckSsoRedirectUri: makeRedirectUrl(window.location, "/silent-check-sso"),
+  //   }).then(() => {
+  //     loggedIn.value = $keycloak.authenticated ?? false;
+  //   });
+  // }
 });
 </script>
 

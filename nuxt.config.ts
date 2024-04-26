@@ -34,7 +34,8 @@ export default defineNuxtConfig({
   },
   modules: [
     '@vueuse/nuxt',
-    '@dargmuesli/nuxt-cookie-control'
+    '@dargmuesli/nuxt-cookie-control',
+    '@sidebase/nuxt-auth'
   ],
   builder: "webpack",
   vite: {
@@ -82,4 +83,10 @@ export default defineNuxtConfig({
     },
     isCookieIdVisible: false,
   },
+  auth: {
+    provider: {
+      type: "authjs",
+      defaultProvider: "keycloak",
+    }
+  }
 });

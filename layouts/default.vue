@@ -136,7 +136,7 @@ import { useConstellationsStore } from "~/stores/constellations";
 const constellationsStore = useConstellationsStore();
 const { isMobile, loggedIn } = storeToRefs(constellationsStore);
 
-const { $keycloak } = useNuxtApp();
+const { signIn, signOut } = useAuth();
 
 const drawer = ref(false)
 const placement = ref<DrawerPlacement>('left')
