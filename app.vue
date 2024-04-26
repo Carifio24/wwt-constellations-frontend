@@ -28,9 +28,9 @@ import { useConstellationsStore } from "~/stores/constellations";
 import { initializeSession } from "~/utils/apis";
 
 const constellationsStore = useConstellationsStore();
-const { loggedIn, showWWT } = storeToRefs(constellationsStore);
+const { showWWT } = storeToRefs(constellationsStore);
 
-const { $keycloak, $backendCall } = useNuxtApp();
+const { $backendCall } = useNuxtApp();
 
 const showAxePopup = ref(false);
 
@@ -38,21 +38,6 @@ onMounted(() => {
   initializeSession($backendCall);
 
   showAxePopup.value = process.env.NODE_ENV !== 'production';
-
-  // In most cases we need to initialize the Keycloak state, but it is possible
-  // that a middleware has already done it.
-  //
-  // See the example of silent SSO checking at
-  // https://www.keycloak.org/docs/latest/securing_apps/index.html#_javascript_adapter
-
-  if (!$keycloak.refreshToken) {
-    $keycloak.init({
-      onLoad: "check-sso",
-      silentCheckSsoRedirectUri: makeRedirectUrl(window.location, "/silent-check-sso"),
-    }).then(() => {
-      loggedIn.value = $keycloak.authenticated ?? false;
-    });
-  }
 });
 </script>
 

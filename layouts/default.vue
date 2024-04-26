@@ -141,7 +141,7 @@ const { isMobile, loggedIn } = storeToRefs(constellationsStore);
 
 const { $keycloak } = useNuxtApp();
 
-const { login, logout, user } = useOidcAuth();
+const { currentProvider, login, logout, user } = useOidcAuth();
 console.log(`Logged in: ${loggedIn.value}`);
 console.log(`User: ${user.value?.userName}`);
 
@@ -163,16 +163,12 @@ interface MenuItem {
 
 
 function logInOut() {
-  if (!process.client) {
-    return;
-  }
-
   if (loggedIn.value) {
     // It would be nice to redirect to the current path, but since redirect URLs
     // have to belong to a specific list, that's not generically possible.
-    logout("keycloak");
+    logout(currentProvider.value);
   } else {
-    login("keycloak");
+    login(currentProvider.value);
   }
 }
 
