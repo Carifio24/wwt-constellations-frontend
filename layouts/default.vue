@@ -84,8 +84,10 @@
                     conclusions or recommendations expressed in this material
                     are those of the author(s) and do not necessarily reflect
                     the views of the National Science Foundation.</n-text>
-                  <n-button @click="logInOut">
-                    {{ loggedIn ? 'Log out' : 'Log in' }}
+                  <n-button>
+                    <a href="/auth/keycloak">
+                      {{ loggedIn ? 'Log out' : 'Log in' }}
+                    </a>
                   </n-button>
                 </template>
               </n-drawer-content>
@@ -139,6 +141,7 @@ const { isMobile } = storeToRefs(constellationsStore);
 const { $keycloak } = useNuxtApp();
 
 const { loggedIn } = useUserSession();
+console.log(`Logged in ${loggedIn.value}`);
 
 
 const drawer = ref(false)
@@ -158,23 +161,12 @@ interface MenuItem {
 }
 
 function logInOut() {
-  if (!process.client) {
-    return;
-  }
-
   if (loggedIn.value) {
     // It would be nice to redirect to the current path, but since redirect URLs
     // have to belong to a specific list, that's not generically possible.
     
   } else {
-    $keycloak.login({
-      redirectUri: makeRedirectUrl(window.location, "/"),
-      prompt: 'login'
-    }).then(() => {
-      loggedIn.value = true;
-    }).catch((error: Error) => {
-      console.log(`Error logging in: ${error.message}`);
-    });
+    navigateTo("/auth/keycloak");
   }
 }
 

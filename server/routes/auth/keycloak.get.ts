@@ -3,6 +3,10 @@ export default oauth.keycloakEventHandler({
     console.log(user);
     console.log(event);
     await setUserSession(event, user);
-    // return sendRedirect(event, "/");
+    return sendRedirect(event, "/");
+  },
+  async onError(event, error) {
+    console.log(`Keycloak login error: ${error}`);
+    return sendRedirect(event, "/");
   }
 });
