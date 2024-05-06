@@ -34,7 +34,8 @@ export default defineNuxtConfig({
   },
   modules: [
     '@vueuse/nuxt',
-    '@dargmuesli/nuxt-cookie-control'
+    '@dargmuesli/nuxt-cookie-control', 
+    'nuxt-auth-utils'
   ],
   builder: "webpack",
   vite: {
@@ -48,6 +49,14 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: publicRuntimeConfig,
+    oauth: {
+      keycloak: {
+        clientId: process.env.NUXT_OIDC_PROVIDERS_KEYCLOAK_CLIENT_ID ?? "",
+        clientSecret: process.env.NUXT_OIDC_PROVIDERS_KEYCLOAK_CLIENT_ID ?? "",
+        serverUrl: "http://localhost:8080",
+        realm: "constellations",
+      },
+    }
   },
   app: {
     head: {
