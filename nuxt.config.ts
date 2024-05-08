@@ -90,7 +90,7 @@ export default defineNuxtConfig({
       },
     },
     middleware: {
-      globalMiddlewareEnabled: true,
+      globalMiddlewareEnabled: false,
       customLoginPage: false,
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
