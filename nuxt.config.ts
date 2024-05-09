@@ -96,5 +96,10 @@ export default defineNuxtConfig({
       // @ts-ignore
       redirect: false,
     },
+    session: {
+      expirationCheck: true,
+      automaticRefresh: true,
+      expirationThreshold: 3600,
+    },
   },
 });
