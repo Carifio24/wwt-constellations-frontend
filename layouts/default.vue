@@ -155,25 +155,16 @@ interface MenuItem {
 }
 
 function logInOut() {
-  if (!process.client) {
-    return;
-  }
-
   if (loggedIn.value) {
     // It would be nice to redirect to the current path, but since redirect URLs
     // have to belong to a specific list, that's not generically possible.
-    $keycloak.logout({
-      redirectUri: makeRedirectUrl(window.location, "/"),
-    }).then(() => {
+    signOut().then(() => {
       loggedIn.value = false;
     }).catch((error: Error) => {
       console.log(`Error logging out: ${error.message}`);
     });
   } else {
-    $keycloak.login({
-      redirectUri: makeRedirectUrl(window.location, "/"),
-      prompt: 'login'
-    }).then(() => {
+    signIn("keycloak").then(() => {
       loggedIn.value = true;
     }).catch((error: Error) => {
       console.log(`Error logging in: ${error.message}`);
