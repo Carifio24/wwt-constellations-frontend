@@ -44,7 +44,7 @@
     "file-loader": "^6.2",
     "less-loader": "^11.1.0",
     "naive-ui": "^2.34",
-    "nuxt": "^3.10.1",
+    "nuxt": "^3.16.0",
     "postcss": "^8.4",
     "postcss-loader": "^7",
     "typescript": "^5.3",
